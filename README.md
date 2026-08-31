@@ -1,78 +1,34 @@
 # Ritchie Bros Asset List
 
-Flutter take-home: fetch marketplace assets and show them in a list.
+Take-home for Ritchie Bros. Pull auction listings from their marketplace API and show them in a list.
 
-## What it does
+Each card has the description, image, location, event name, and a readable date. If the item is in the US we show city, state, and country. Anywhere else it's just city and country.
 
-The app asks the Ritchie Bros API for equipment listings, then shows each one as a card:
+There's also pagination (stretch goal). Scroll to the bottom, get 20 more.
 
-- description
-- photo
-- location
-- event name
-- date
+## Layout
 
-USA listings show **City, State, Country**. Everywhere else shows **City, Country**.
+Pretty standard:
 
-Scroll to the bottom and it loads 20 more.
+- `AssetRepository` hits the API
+- `AssetBloc` owns the list and loading state
+- the screen / cards just render whatever the bloc already has. Cards are dumb on purpose — they take strings, they don't format locations or dates.
 
-## How it is put together
+Location formatting lives on the `Asset` model. That's the one bit of actual business logic and it's what the tests cover.
 
-Think of three jobs:
+## from / size
 
-1. **Repository** — talks to the internet. It POSTs to the search API.
-2. **Bloc** — holds the list in memory and decides when to load more.
-3. **Screen / cards** — draws what the bloc already knows. Cards do not format data. They just display strings.
+The search endpoint is a POST. You send `from` (where to start) and `size` (how many, we always use 20).
 
-```
-Screen  →  Bloc  →  Repository  →  API
-                ←  list of assets
-```
+First request is `from: 0`. After that `from` is just however many items we already have, so 20, then 40, etc. The API only ever gives you one page. The bloc concatenates them so the UI has the whole list.
 
-### The API request
+## Pagination
 
-The API wants two numbers:
+Scroll near the bottom and we request the next page. The screen only does that when you're actually scrolling down, nothing is already loading, and we haven't already asked for this "visit" to the bottom. After a fetch starts we wait until you scroll back up a bit before we allow another one, so you get one page per trip to the end. A spinner sits under the last card while that request is in flight.
 
-- `from` — skip this many items
-- `size` — how many to bring back (always 20)
+The bloc appends the new 20 onto `state.assets`. `from` for the next call is just `assets.length`.
 
-First load: `{ "from": 0, "size": 20 }`  
-Next load: `{ "from": 20, "size": 20 }`  
-Then 40, 60, and so on.
-
-`from` is just “how many items we already have.”
-
-The bloc **keeps the full list**. The API only ever returns one page. Each new page gets appended:
-
-`old list + new 20 = bigger list`
-
-## Pagination (the tricky part)
-
-Loading more sounds simple: “user hits the bottom, fetch 20 more.”
-
-That naive version loaded many pages at once. Two reasons:
-
-1. **Scroll events fire a lot.** While one request was in flight, every extra scroll tick queued another fetch. When the first page came back, those queued fetches all ran. 20 jumped to 180.
-2. **Staying at the bottom.** After new rows were inserted, the list was still at the bottom, so it immediately asked for another page.
-
-What we do now:
-
-- Only fetch if the user is actually scrolling down.
-- Only one request at a time.
-- After we ask for a page, **disarm**. Do not ask again until the user scrolls back up (more than 200px from the bottom), then down again.
-
-So one trip to the bottom = one extra page. A spinner under the last card shows while that page loads.
-
-## Location
-
-That rule lives on the `Asset` model, not in the widget.
-
-- Country is USA / US / United States → include state
-- Anything else → city and country only
-
-Tests cover those cases.
-
-## Run it
+## Run
 
 ```bash
 flutter pub get
