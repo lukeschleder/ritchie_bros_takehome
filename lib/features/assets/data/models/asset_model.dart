@@ -1,6 +1,7 @@
+import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
 
-class Asset {
+class Asset extends Equatable {
   const Asset({
     required this.assetDescription,
     required this.imageUrl,
@@ -44,4 +45,15 @@ class Asset {
   }
 
   String get formattedDate => DateFormat.yMMMd().format(eventStartDate);
+
+  @override
+  List<Object?> get props => [
+        assetDescription,
+        imageUrl,
+        locationCountry,
+        locationState,
+        locationCity,
+        eventAdvertisedName,
+        eventStartDate,
+      ];
 }
