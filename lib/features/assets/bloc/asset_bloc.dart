@@ -9,24 +9,22 @@ import '../data/repositories/asset_repository.dart';
 part 'asset_event.dart';
 part 'asset_state.dart';
 
-EventTransformer<E> _sequential<E>() {
-  return (events, mapper) => events.asyncExpand(mapper);
-}
-
 class AssetBloc extends Bloc<AssetEvent, AssetState> {
   AssetBloc({required AssetRepository repository})
       : _repository = repository,
         super(const AssetState()) {
     on<FetchAssets>(_onFetchAssets);
-    on<FetchNextPage>(_onFetchNextPage, transformer: _sequential());
+    on<FetchNextPage>(_onFetchNextPage);
   }
 
   final AssetRepository _repository;
+  var _nextPageInFlight = false;
 
   Future<void> _onFetchAssets(
     FetchAssets event,
     Emitter<AssetState> emit,
   ) async {
+    _nextPageInFlight = false;
     emit(
       state.copyWith(
         status: AssetStatus.loading,
@@ -64,15 +62,17 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
     FetchNextPage event,
     Emitter<AssetState> emit,
   ) async {
-    if (!state.status.isSuccess || state.hasReachedMax || state.isLoadingMore) {
+    if (_nextPageInFlight || !state.status.isSuccess || state.hasReachedMax) {
       return;
     }
 
+    _nextPageInFlight = true;
+    final offset = state.assets.length;
     emit(state.copyWith(isLoadingMore: true));
 
     try {
       final nextPage = await _repository.fetchAssets(
-        offset: state.assets.length,
+        offset: offset,
         limit: Consts.pageSize,
       );
 
@@ -85,14 +85,10 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
           clearErrorMessage: true,
         ),
       );
-    } catch (error) {
-      emit(
-        state.copyWith(
-          status: AssetStatus.failure,
-          isLoadingMore: false,
-          errorMessage: error.toString(),
-        ),
-      );
+    } catch (_) {
+      emit(state.copyWith(isLoadingMore: false));
+    } finally {
+      _nextPageInFlight = false;
     }
   }
 }

@@ -33,9 +33,10 @@ class AssetRepository {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       final records = body['records'] as List<dynamic>? ?? const [];
 
-      return records
-          .map((item) => Asset.fromJson(item as Map<String, dynamic>))
-          .toList();
+      return [
+        for (final item in records)
+          if (item is Map<String, dynamic>) Asset.fromJson(item),
+      ];
     } catch (error, stackTrace) {
       if (error is Exception) {
         Error.throwWithStackTrace(error, stackTrace);

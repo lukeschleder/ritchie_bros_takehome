@@ -97,7 +97,7 @@ abstract class AppLocalizations {
   /// The title of the application
   ///
   /// In en, this message translates to:
-  /// **'flutter_excercise'**
+  /// **'Assets'**
   String get appTitle;
 }
 

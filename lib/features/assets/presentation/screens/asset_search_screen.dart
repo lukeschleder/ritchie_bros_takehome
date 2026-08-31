@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../bloc/asset_bloc.dart';
@@ -31,19 +32,18 @@ class _AssetSearchView extends StatefulWidget {
 }
 
 class _AssetSearchViewState extends State<_AssetSearchView> {
-  late final ScrollController _scrollController;
+  final _scrollController = ScrollController();
+  var _loadMoreArmed = true;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController()..addListener(_onScroll);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -51,10 +51,24 @@ class _AssetSearchViewState extends State<_AssetSearchView> {
     if (!_scrollController.hasClients) return;
 
     final position = _scrollController.position;
-    if (position.pixels >=
-        position.maxScrollExtent - Consts.loadMoreThreshold) {
-      context.read<AssetBloc>().add(const FetchNextPage());
+    final bloc = context.read<AssetBloc>();
+
+    if (position.extentAfter > Consts.loadMoreThreshold) {
+      if (!bloc.state.isLoadingMore) {
+        _loadMoreArmed = true;
+      }
+      return;
     }
+
+    if (!_loadMoreArmed ||
+        bloc.state.isLoadingMore ||
+        bloc.state.hasReachedMax ||
+        position.userScrollDirection != ScrollDirection.reverse) {
+      return;
+    }
+
+    _loadMoreArmed = false;
+    bloc.add(const FetchNextPage());
   }
 
   @override
@@ -88,11 +102,13 @@ class _AssetSearchViewState extends State<_AssetSearchView> {
             return const Center(child: Text('No assets found'));
           }
 
-          final itemCount = state.assets.length + (state.isLoadingMore ? 1 : 0);
-
           return ListView.builder(
             controller: _scrollController,
-            itemCount: itemCount,
+            padding: const EdgeInsets.only(
+              top: Consts.listTopPadding,
+              bottom: Consts.listBottomPadding,
+            ),
+            itemCount: state.assets.length + (state.isLoadingMore ? 1 : 0),
             itemBuilder: (context, index) {
               if (index >= state.assets.length) {
                 return const Padding(

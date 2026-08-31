@@ -36,8 +36,9 @@ class Asset extends Equatable {
 
   /// USA assets include state; all others are city and country only.
   String get formattedLocation {
-    final isUsa =
-        locationCountry == 'USA' || locationCountry == 'United States';
+    final isUsa = locationCountry == 'USA' ||
+        locationCountry == 'US' ||
+        locationCountry == 'United States';
     if (isUsa) {
       return '$locationCity, $locationState, $locationCountry';
     }
