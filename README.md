@@ -1,6 +1,6 @@
 # Ritchie Bros Asset List
 
-Take-home for Ritchie Bros. Pull auction listings from their marketplace API and show them in a list.
+Take-home for Ritchie Bros. Pull auction listings from their marketplace API and show them in a list.  Used Cursor AI for some stages of brainstorming and building this app.
 
 Each card has the description, image, location, event name, and a readable date. If the item is in the US we show city, state, and country. Anywhere else it's just city and country.
 
