@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/asset_model.dart';
+import '../../constants/consts.dart';
 
 class AssetRepository {
   AssetRepository({http.Client? client}) : _client = client ?? http.Client();
@@ -12,7 +13,10 @@ class AssetRepository {
 
   final http.Client _client;
 
-  Future<List<Asset>> fetchAssets({int offset = 0, int limit = 20}) async {
+  Future<List<Asset>> fetchAssets({
+    int offset = 0,
+    int limit = Consts.pageSize,
+  }) async {
     try {
       final response = await _client.post(
         Uri.parse(_searchUrl),

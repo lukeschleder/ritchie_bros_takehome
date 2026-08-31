@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import '../features/assets/presentation/screens/asset_search_screen.dart';
 import 'RitchieBros/rb_item_details_view.dart';
-import 'RitchieBros/rb_list_view.dart';
 import 'settings/settings_controller.dart';
 import 'settings/settings_view.dart';
 
@@ -71,9 +71,9 @@ class MyApp extends StatelessWidget {
                     return SettingsView(controller: settingsController);
                   case SampleItemDetailsView.routeName:
                     return const SampleItemDetailsView();
-                  case RBItemListView.routeName:
+                  case AssetSearchScreen.routeName:
                   default:
-                    return const RBItemListView();
+                    return const AssetSearchScreen();
                 }
               },
             );

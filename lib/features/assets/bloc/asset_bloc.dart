@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../constants/consts.dart';
 import '../data/models/asset_model.dart';
 import '../data/repositories/asset_repository.dart';
 
@@ -20,8 +21,6 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
     on<FetchNextPage>(_onFetchNextPage, transformer: _sequential());
   }
 
-  static const _pageSize = 20;
-
   final AssetRepository _repository;
 
   Future<void> _onFetchAssets(
@@ -38,14 +37,14 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
     try {
       final assets = await _repository.fetchAssets(
         offset: 0,
-        limit: _pageSize,
+        limit: Consts.pageSize,
       );
 
       emit(
         state.copyWith(
           status: AssetStatus.success,
           assets: List<Asset>.unmodifiable(assets),
-          hasReachedMax: assets.length < _pageSize,
+          hasReachedMax: assets.length < Consts.pageSize,
           isLoadingMore: false,
           clearErrorMessage: true,
         ),
@@ -74,14 +73,14 @@ class AssetBloc extends Bloc<AssetEvent, AssetState> {
     try {
       final nextPage = await _repository.fetchAssets(
         offset: state.assets.length,
-        limit: _pageSize,
+        limit: Consts.pageSize,
       );
 
       emit(
         state.copyWith(
           status: AssetStatus.success,
           assets: List<Asset>.unmodifiable([...state.assets, ...nextPage]),
-          hasReachedMax: nextPage.length < _pageSize,
+          hasReachedMax: nextPage.length < Consts.pageSize,
           isLoadingMore: false,
           clearErrorMessage: true,
         ),
